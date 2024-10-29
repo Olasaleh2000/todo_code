@@ -28,7 +28,10 @@ class AppTheme {
               side: BorderSide(
             width: 4,
             color: white,
-          ))));
+          ))),
+      textTheme: TextTheme(
+          titleMedium: TextStyle(
+              fontSize: 18, fontWeight: FontWeight.bold, color: black)));
 
   static ThemeData darkTheme = ThemeData();
 }
