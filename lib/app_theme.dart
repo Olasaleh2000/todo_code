@@ -31,7 +31,11 @@ class AppTheme {
           ))),
       textTheme: TextTheme(
           titleMedium: TextStyle(
-              fontSize: 18, fontWeight: FontWeight.bold, color: black)));
+              fontSize: 18, fontWeight: FontWeight.bold, color: black),
+          titleSmall: TextStyle(
+              fontSize: 14, fontWeight: FontWeight.w400, color: black)),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(backgroundColor: primary)));
 
   static ThemeData darkTheme = ThemeData();
 }

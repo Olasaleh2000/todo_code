@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:todo_code/app_theme.dart';
 
+import 'tabs/add_task_bottom_sheet.dart';
 import 'tabs/settings/settings_tab.dart';
 import 'tabs/tasks/tasks_tab.dart';
 
@@ -12,7 +13,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<Widget> tabs = [
-    TaskTab(),
+    TasksTab(),
     SettingsTab(),
   ];
 
@@ -44,7 +45,10 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () => showModalBottomSheet(
+          context: context,
+          builder: (_) => AddTaskBottomSheet(),
+        ),
         child: Icon(
           Icons.add,
           size: 32,
