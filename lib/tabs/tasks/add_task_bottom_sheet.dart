@@ -1,0 +1,138 @@
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:todo_code/app_theme.dart';
+import 'package:todo_code/firebase_function.dart';
+import 'package:todo_code/tabs/tasks/tasks_provider.dart';
+import '../../models/task_modle.dart';
+import '../../widgets/defult_elvated_button.dart';
+import '../../widgets/defult_task_form_field.dart';
+
+class AddTaskBottomSheet extends StatefulWidget {
+  @override
+  State<AddTaskBottomSheet> createState() => _AddTaskBottomSheetState();
+}
+
+class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
+  TextEditingController titleController = TextEditingController();
+  TextEditingController descriptionController = TextEditingController();
+  DateTime selectedDate = DateTime.now();
+  DateFormat dateFormat = DateFormat('dd/MM/yyyy');
+  var formKey = GlobalKey<FormState>();
+  @override
+  Widget build(BuildContext context) {
+    TextStyle titleMediumStyle = Theme.of(context).textTheme.titleMedium!;
+    return Padding(
+      padding:
+          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.5,
+        padding: EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppTheme.white,
+          borderRadius: BorderRadius.horizontal(
+            left: Radius.circular(20),
+            right: Radius.circular(20),
+          ),
+        ),
+        child: Form(
+          key: formKey,
+          child: Column(
+            children: [
+              Text(
+                'Add new task',
+                style: titleMediumStyle,
+              ),
+              const SizedBox(height: 16),
+              DefaultTextFormField(
+                hintText: 'Enter task title',
+                controller: titleController,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Title cannot be empty';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              DefaultTextFormField(
+                hintText: 'Enter task description',
+                controller: descriptionController,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Description cannot be empty';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              Text('Select date', style: titleMediumStyle.copyWith()),
+              const SizedBox(height: 4),
+              InkWell(
+                onTap: () async {
+                  DateTime? dateTime = await showDatePicker(
+                    context: context,
+                    initialEntryMode: DatePickerEntryMode.calendarOnly,
+                    initialDate: selectedDate,
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                  );
+
+                  if (dateTime != null && dateTime != selectedDate) {
+                    setState(() {
+                      selectedDate = dateTime;
+                    });
+                  }
+                },
+                child: Text(
+                  dateFormat.format(selectedDate),
+                ),
+              ),
+              const SizedBox(height: 32),
+              DefaultElevatedButton(
+                height: 48,
+                width: MediaQuery.of(context).size.width,
+                label: 'Add task',
+                onPressed: () {
+                  if (formKey.currentState!.validate()) {
+                    addTask();
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void addTask() {
+    TaskModel task = TaskModel(
+      title: titleController.text,
+      description: descriptionController.text,
+      date: selectedDate,
+    );
+    FirebaseFunctions.addTaskToFirestore(task)
+        .timeout(Duration(microseconds: 100), onTimeout: () {
+      Navigator.of(context).pop();
+      Provider.of<TasksProvidar>(context, listen: false).getTask();
+      Fluttertoast.showToast(
+          msg: "SUCCESSFULY ",
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 5,
+          backgroundColor: AppTheme.green);
+    }).catchError(
+      (error) {
+        Fluttertoast.showToast(
+          msg: "WRONG",
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 5,
+          backgroundColor: AppTheme.red,
+        );
+      },
+    );
+  }
+}
