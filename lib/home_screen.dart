@@ -7,6 +7,8 @@ import 'tabs/tasks/tasks_tab.dart';
 
 class HomeScreen extends StatefulWidget {
   static const String routeName = '/home';
+
+  static var routName;
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }

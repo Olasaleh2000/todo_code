@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:todo_code/app_theme.dart';
+import 'package:todo_code/auth/login_screen.dart';
+import 'package:todo_code/auth/register_screen.dart';
 import 'package:todo_code/home_screen.dart';
 
 void main() {
@@ -14,6 +16,8 @@ class ToDoApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       routes: {
+        RegisterScreen.routName: (_) => RegisterScreen(),
+        LoginScreen.routName: (_) => LoginScreen(),
         HomeScreen.routeName: (_) => HomeScreen(),
       },
       initialRoute: HomeScreen.routeName,
