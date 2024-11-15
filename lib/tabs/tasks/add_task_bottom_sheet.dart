@@ -3,6 +3,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:todo_code/app_theme.dart';
+import 'package:todo_code/auth/user_provider.dart';
 import 'package:todo_code/firebase_function.dart';
 import 'package:todo_code/tabs/tasks/tasks_provider.dart';
 import '../../models/task_modle.dart';
@@ -113,24 +114,33 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
       description: descriptionController.text,
       date: selectedDate,
     );
-    FirebaseFunctions.addTaskToFirestore(task)
-        .timeout(Duration(microseconds: 100), onTimeout: () {
-      Navigator.of(context).pop();
-      Provider.of<TasksProvidar>(context, listen: false).getTask();
-      Fluttertoast.showToast(
-          msg: "SUCCESSFULY ",
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.CENTER,
-          timeInSecForIosWeb: 5,
-          backgroundColor: AppTheme.green);
-    }).catchError(
-      (error) {
+    String userId =
+        Provider.of<UserProvider>(context, listen: false).currentUser!.id;
+    FirebaseFunctions.addTaskToFirestore(task, userId).then(
+      (_) {
+        Navigator.of(context).pop();
+        Provider.of<TasksProvider>(context, listen: false).getTasks(userId);
         Fluttertoast.showToast(
-          msg: "WRONG",
+          msg: "Task added successfully",
           toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.CENTER,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 5,
+          backgroundColor: AppTheme.green,
+          textColor: AppTheme.white,
+          fontSize: 16.0,
+        );
+      },
+    ).catchError(
+      (error) {
+        debugPrint(error);
+        Fluttertoast.showToast(
+          msg: "Something went wrong",
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
           timeInSecForIosWeb: 5,
           backgroundColor: AppTheme.red,
+          textColor: AppTheme.white,
+          fontSize: 16.0,
         );
       },
     );

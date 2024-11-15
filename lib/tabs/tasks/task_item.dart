@@ -1,103 +1,127 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
+import 'package:todo_code/app_theme.dart';
+import 'package:todo_code/auth/user_provider.dart';
 import 'package:todo_code/firebase_function.dart';
+import 'package:todo_code/models/task_modle.dart';
+import 'package:todo_code/tabs/settings/settings_provider.dart';
 import 'package:todo_code/tabs/tasks/tasks_provider.dart';
-
-import '../../app_theme.dart';
-import '../../models/task_modle.dart';
+import 'package:todo_code/tabs/tasks/update_task_screen.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class TaskItem extends StatelessWidget {
-  TaskItem(this.task);
-
-  TaskModel task;
+  final TaskModel task;
+  const TaskItem({super.key, required this.task});
 
   @override
   Widget build(BuildContext context) {
+    SettingsProvider settingsProvider = Provider.of<SettingsProvider>(context);
+    AppLocalizations appLocalizations = AppLocalizations.of(context)!;
+    TextTheme textTheme = Theme.of(context).textTheme;
+    String userId =
+        Provider.of<UserProvider>(context, listen: false).currentUser!.id;
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       child: Slidable(
         startActionPane: ActionPane(
           motion: const ScrollMotion(),
           children: [
             SlidableAction(
               onPressed: (_) {
-                FirebaseFunctions.deletTaskFromFirestore(task.id).timeout(
-                  Duration(microseconds: 100),
-                  onTimeout: () {
-                    Provider.of<TasksProvidar>(context, listen: false)
-                        .getTask();
+                FirebaseFunctions.deleteTaskFromFirestore(task.id, userId).then(
+                  (_) {
+                    Provider.of<TasksProvider>(context, listen: false)
+                        .getTasks(userId);
                   },
-                ).catchError((_) {
-                  Fluttertoast.showToast(
-                    msg: "WRONG",
-                    toastLength: Toast.LENGTH_LONG,
-                    gravity: ToastGravity.CENTER,
-                    timeInSecForIosWeb: 5,
-                    backgroundColor: AppTheme.red,
-                  );
-                });
+                );
               },
+              borderRadius: BorderRadius.horizontal(
+                left: settingsProvider.languageCode == 'en'
+                    ? const Radius.circular(15)
+                    : Radius.zero,
+                right: settingsProvider.languageCode == 'ar'
+                    ? const Radius.circular(15)
+                    : Radius.zero,
+              ),
               backgroundColor: AppTheme.red,
               foregroundColor: AppTheme.white,
               icon: Icons.delete,
-              label: 'Delete',
+              label: appLocalizations.delete,
             ),
             SlidableAction(
-              onPressed: (_) {},
+              onPressed: (_) {
+                Navigator.of(context).pushNamed(
+                  UpdateTaskScreen.routeName,
+                  arguments: task,
+                );
+              },
               backgroundColor: AppTheme.primary,
-              foregroundColor: AppTheme.white,
-              icon: Icons.share,
-              label: 'Edit',
+              foregroundColor: Colors.white,
+              icon: Icons.edit,
+              label: appLocalizations.edit,
             ),
           ],
         ),
         child: Container(
-          padding: EdgeInsets.all(20),
-          margin: EdgeInsets.symmetric(vertical: 8, horizontal: 20),
           decoration: BoxDecoration(
-            color: AppTheme.white,
+            color: settingsProvider.isDark ? AppTheme.black : AppTheme.white,
             borderRadius: BorderRadius.circular(15),
           ),
+          padding: const EdgeInsets.all(20),
           child: Row(
             children: [
               Container(
                 height: 62,
                 width: 4,
-                margin: EdgeInsetsDirectional.only(end: 12),
-                color: AppTheme.primary,
+                color: task.isDone ? AppTheme.green : AppTheme.primary,
+                margin: const EdgeInsetsDirectional.only(end: 12),
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     task.title,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(color: AppTheme.primary),
+                    style: textTheme.titleMedium!.copyWith(
+                        color: task.isDone ? AppTheme.green : AppTheme.primary),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     task.description,
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    style: textTheme.titleMedium!.copyWith(
+                        color: task.isDone ? AppTheme.green : AppTheme.primary),
                   ),
                 ],
               ),
-              Spacer(),
-              Container(
-                height: 34,
-                width: 69,
-                decoration: BoxDecoration(
-                  color: AppTheme.primary,
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                child: Icon(
-                  Icons.check,
-                  color: AppTheme.white,
-                  size: 32,
-                ),
+              const Spacer(),
+              InkWell(
+                onTap: () {
+                  FirebaseFunctions.updateTaskFromFirestore(
+                          task.id, userId, task.copyWith(isDone: !task.isDone))
+                      .then((_) {
+                    Provider.of<TasksProvider>(context, listen: false)
+                        .getTasks(userId);
+                  });
+                },
+                child: task.isDone
+                    ? Text(
+                        appLocalizations.doneTask,
+                        style: textTheme.titleMedium!
+                            .copyWith(fontSize: 24, color: AppTheme.green),
+                      )
+                    : Container(
+                        height: 34,
+                        width: 69,
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.check,
+                          color: AppTheme.white,
+                          size: 32,
+                        ),
+                      ),
               ),
             ],
           ),

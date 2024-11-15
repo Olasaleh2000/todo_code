@@ -1,25 +1,34 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:todo_code/firebase_function.dart';
 import 'package:todo_code/models/task_modle.dart';
 
-class TasksProvidar with ChangeNotifier {
+class TasksProvider with ChangeNotifier {
   List<TaskModel> tasks = [];
-  DateTime selectedDate = DateTime.now();
-  Future<void> getTask() async {
-    List<TaskModel> allTask =
-        await FirebaseFunctions.getAllTasksFromFirestore();
 
-    tasks = allTask
-        .where((task) =>
-            task.date.year == selectedDate.year &&
-            task.date.month == selectedDate.month &&
-            task.date.day == selectedDate.day)
+  DateTime selectedDate = DateTime.now();
+
+  Future<void> getTasks(String userId) async {
+    List<TaskModel> allTasks =
+        await FirebaseFunctions.getAllTasksFromFirestore(userId);
+    tasks = allTasks
+        .where(
+          (task) =>
+              task.date.year == selectedDate.year &&
+              task.date.month == selectedDate.month &&
+              task.date.day == selectedDate.day,
+        )
         .toList();
     notifyListeners();
   }
 
-  void changeSelectedDate(DateTime date) {
-    selectedDate = date;
-    getTask();
+  void getSelectedDateTasks(DateTime selectedDate, String userId) {
+    this.selectedDate = selectedDate;
+    getTasks(userId);
+  }
+
+  void reset() {
+    tasks = [];
+    selectedDate = DateTime.now();
   }
 }

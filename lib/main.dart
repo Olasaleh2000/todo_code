@@ -1,39 +1,57 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo_code/app_theme.dart';
 import 'package:todo_code/auth/login_screen.dart';
 import 'package:todo_code/auth/register_screen.dart';
+import 'package:todo_code/auth/user_provider.dart';
 import 'package:todo_code/home_screen.dart';
+import 'package:todo_code/tabs/settings/settings_provider.dart';
 import 'package:todo_code/tabs/tasks/tasks_provider.dart';
+import 'package:todo_code/tabs/tasks/update_task_screen.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  await FirebaseFirestore.instance.disableNetwork();
-
-  runApp(
-    ChangeNotifierProvider(create: (_) => TasksProvidar(), child: ToDoApp()),
-  );
+  // await FirebaseFirestore.instance.disableNetwork();
+  runApp(MultiProvider(
+    providers: [
+      ChangeNotifierProvider(
+        create: (context) => SettingsProvider(),
+      ),
+      ChangeNotifierProvider(
+        create: (context) => TasksProvider(),
+      ),
+      ChangeNotifierProvider(
+        create: (context) => UserProvider(),
+      ),
+    ],
+    child: const TodoApp(),
+  ));
 }
 
-class ToDoApp extends StatelessWidget {
-  const ToDoApp({super.key});
+class TodoApp extends StatelessWidget {
+  const TodoApp({super.key});
 
   @override
   Widget build(BuildContext context) {
+    SettingsProvider settingsProvider = Provider.of<SettingsProvider>(context);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       routes: {
-        RegisterScreen.routName: (_) => RegisterScreen(),
-        LoginScreen.routName: (_) => LoginScreen(),
-        HomeScreen.routeName: (_) => HomeScreen(),
+        HomeScreen.routeName: (context) => HomeScreen(),
+        LoginScreen.routeName: (context) => LoginScreen(),
+        RegisterScreen.routeName: (context) => RegisterScreen(),
+        UpdateTaskScreen.routeName: (context) => UpdateTaskScreen(),
       },
-      initialRoute: HomeScreen.routeName,
+      initialRoute: LoginScreen.routeName,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.light,
+      themeMode: settingsProvider.themeMode,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      locale: Locale(settingsProvider.languageCode),
     );
   }
 }
